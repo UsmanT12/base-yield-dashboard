@@ -44,23 +44,57 @@ export default function Home() {
     }
   };
 
-  // Fetch Seamless data
-  const fetchSeamlessData = async (userAddress: string) => {
+  // Fetch Seamless data with retry logic
+  const fetchSeamlessData = async (userAddress: string, retryCount = 0) => {
     setSeamlessLoading(true);
     try {
+      console.log(
+        `Fetching Seamless data for ${userAddress}, attempt ${retryCount + 1}`
+      );
+
+      // Add small delay between calls to avoid rate limiting
+      if (retryCount > 0) {
+        await new Promise((resolve) => setTimeout(resolve, 1000 * retryCount));
+      }
+
       const [positions, accountData] = await Promise.all([
         getUserSeamlessPositions(userAddress),
         getUserAccountData(userAddress),
       ]);
 
+      console.log("Seamless data fetched successfully:", {
+        positions,
+        accountData,
+      });
       setSeamlessPositions(positions);
       setSeamlessAccountData(accountData);
     } catch (error) {
-      console.error("Error fetching Seamless data:", error);
+      console.error(
+        `Error fetching Seamless data (attempt ${retryCount + 1}):`,
+        error
+      );
+
+      // Retry up to 2 times
+      if (retryCount < 2) {
+        console.log(
+          `Retrying Seamless data fetch in ${retryCount + 1} seconds...`
+        );
+        setTimeout(() => {
+          fetchSeamlessData(userAddress, retryCount + 1);
+        }, 1000 * (retryCount + 1));
+        return; // Don't set loading to false yet
+      }
+
+      // Only clear data after all retries failed
+      console.error("All Seamless data fetch attempts failed");
       setSeamlessPositions([]);
       setSeamlessAccountData(null);
     } finally {
-      setSeamlessLoading(false);
+      // Always set loading to false after the first attempt completes
+      // (retry attempts will manage their own loading state)
+      if (retryCount === 0) {
+        setSeamlessLoading(false);
+      }
     }
   };
 

@@ -26,9 +26,17 @@ export interface UserAccountData {
   healthFactorFormatted: string;
 }
 
-// Create provider instance
+// Create provider instance (singleton pattern to avoid rate limits)
+let providerInstance: ethers.JsonRpcProvider | null = null;
+
 const getProvider = () => {
-  return new ethers.JsonRpcProvider(BASE_RPC_URL);
+  if (!providerInstance) {
+    providerInstance = new ethers.JsonRpcProvider(BASE_RPC_URL, {
+      name: "Base",
+      chainId: 8453,
+    });
+  }
+  return providerInstance;
 };
 
 // Get user's account data from Seamless Protocol
@@ -154,6 +162,8 @@ export async function getUserBorrowedAmount(
 export async function getUserSeamlessPositions(
   userAddress: string
 ): Promise<SeamlessPosition[]> {
+  console.log("Starting getUserSeamlessPositions for:", userAddress);
+
   try {
     const provider = getProvider();
     const seamlessContract = new ethers.Contract(
@@ -162,8 +172,17 @@ export async function getUserSeamlessPositions(
       provider
     );
 
-    // Get list of all reserves
-    const reservesList = await seamlessContract.getReservesList();
+    console.log("Fetching reserves list...");
+    // Get list of all reserves with timeout
+    const reservesListPromise = seamlessContract.getReservesList();
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error("Reserves list fetch timeout")), 10000)
+    );
+
+    const reservesList = (await Promise.race([
+      reservesListPromise,
+      timeoutPromise,
+    ])) as string[];
 
     const positions: SeamlessPosition[] = [];
 
@@ -233,9 +252,17 @@ export async function getUserSeamlessPositions(
       }
     }
 
+    console.log(
+      `Found ${positions.length} Seamless positions for ${userAddress}:`,
+      positions
+    );
     return positions;
   } catch (error) {
     console.error("Error fetching Seamless positions:", error);
+    console.error("Error details:", {
+      message: error instanceof Error ? error.message : String(error),
+      userAddress,
+    });
     return [];
   }
 }
