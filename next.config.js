@@ -2,6 +2,9 @@
 const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
+  experimental: {
+    suppressHydrationWarning: true,
+  },
   images: {
     domains: ["assets.coingecko.com", "logos.covalenthq.com"],
   },

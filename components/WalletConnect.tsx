@@ -1,8 +1,26 @@
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { useAccount, useNetwork } from "wagmi";
 import { useState, useEffect } from "react";
+import dynamic from "next/dynamic";
 
-export default function WalletConnect() {
+// Create a client-side only version of ConnectButton to avoid hydration issues
+const DynamicConnectButton = dynamic(
+  () => Promise.resolve(() => <ConnectButton />),
+  {
+    ssr: false,
+    loading: () => (
+      <button
+        className="btn-primary text-lg px-8 py-3 opacity-50"
+        disabled
+        type="button"
+      >
+        Loading...
+      </button>
+    ),
+  }
+);
+
+function WalletConnect() {
   const { address, isConnected } = useAccount();
   const { chain } = useNetwork();
   const [mounted, setMounted] = useState(false);
@@ -11,20 +29,9 @@ export default function WalletConnect() {
     setMounted(true);
   }, []);
 
-  // Prevent hydration mismatch by not rendering until mounted
-  if (!mounted) {
-    return (
-      <div className="flex flex-col items-center space-y-4">
-        <div className="btn-primary text-lg px-8 py-3 opacity-50">
-          Loading...
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="flex flex-col items-center space-y-4">
-      <ConnectButton />
+      <DynamicConnectButton />
 
       {isConnected && mounted && (
         <div className="text-center space-y-2">
@@ -40,3 +47,5 @@ export default function WalletConnect() {
     </div>
   );
 }
+
+export default WalletConnect;

@@ -256,16 +256,34 @@ export function calculateAPY(rate: string): number {
 // Format health factor for display
 export function formatHealthFactor(healthFactor: string): string {
   const hf = parseFloat(healthFactor);
-  if (hf === 0) return "∞";
+
+  // Handle edge cases
+  if (hf === 0 || !isFinite(hf) || isNaN(hf)) return "∞";
+
+  // Very large numbers (essentially infinite)
+  if (hf > 1000000) return "∞";
+
+  // Very small numbers (liquidation risk)
+  if (hf < 0.001) return "0.001";
+
+  // Normal formatting
   if (hf < 1) return hf.toFixed(3);
   if (hf < 10) return hf.toFixed(2);
-  return hf.toFixed(1);
+  if (hf < 100) return hf.toFixed(1);
+
+  // Large but finite numbers
+  return Math.floor(hf).toString();
 }
 
 // Get health factor color based on risk level
 export function getHealthFactorColor(healthFactor: string): string {
   const hf = parseFloat(healthFactor);
-  if (hf === 0) return "text-green-600"; // No debt
+
+  // Handle edge cases - very large numbers or no debt
+  if (hf === 0 || !isFinite(hf) || isNaN(hf) || hf > 1000000) {
+    return "text-green-600"; // No debt or extremely safe
+  }
+
   if (hf >= 2) return "text-green-600"; // Safe
   if (hf >= 1.5) return "text-yellow-600"; // Moderate risk
   if (hf >= 1.1) return "text-orange-600"; // High risk
