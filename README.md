@@ -1,159 +1,147 @@
 # Base Yield Dashboard
 
-A comprehensive DeFi portfolio dashboard for the Base network that allows users to track their token balances, lending positions, and yield farming opportunities in one place.
+A minimal DeFi portfolio dashboard for the Base network (MVP). It reads on-chain data directly and displays token balances, Seamless lending/borrowing positions, and LP/DEX-related info where available.
 
-## 🚀 Features
+This repository contains the working MVP and developer tooling. The app is built with Next.js + TypeScript and uses wagmi, RainbowKit and ethers for wallet/connect and on-chain reads.
 
-- **Wallet Connection**: Connect via MetaMask, Coinbase Wallet, and other popular wallets
-- **Token Balances**: Real-time ERC-20 token balances (ETH, USDC, AERO, etc.)
-- **Seamless Protocol Integration**: View lending and borrowing positions with APY rates
-- **Health Factor Monitoring**: Track your position health and liquidation risk
-- **Responsive Design**: Works seamlessly on desktop and mobile devices
-- **Base Network Optimized**: Built specifically for Base L2 for fast, low-cost transactions
+---
 
-## 🛠 Tech Stack
+## What I implemented (status)
 
-- **Frontend**: Next.js 14, TypeScript, TailwindCSS
-- **Blockchain**: wagmi, ethers.js, RainbowKit
-- **Network**: Base (Mainnet & Sepolia Testnet)
-- **Data**: Direct on-chain contract calls
+- Wallet connection via RainbowKit (MetaMask, Coinbase Wallet, WalletConnect). The wallet button is dynamically imported client-side to avoid hydration issues.
+- ERC-20 balance fetching for ETH (native), USDC, WETH and AERO using ethers.js.
+- Seamless Protocol integration: fetches user account snapshot and reserve positions (supply / borrow) on-chain.
+- Provider singleton and retry/timeouts: uses a single provider instance and simple retry/backoff logic to reduce RPC rate-limit issues.
+- Health Factor formatting: large/infinite values are shown as `∞`, small values are clamped, and color-coded risk indicator is provided.
+- TailwindCSS for styling and basic component cards (TokenCard, YieldCard).
+- Basic logging and debugging helpers in the data fetch utilities to help diagnose RPC issues.
 
-## 📁 Project Structure
+Status: functional MVP — wallet connect, token balances and Seamless positions fetch correctly in most cases. Some features (price USD conversion, Uniswap/Aerodrome LP parsing) are TODO.
 
-```
-base-yield-dashboard/
-├── pages/
-│   ├── index.tsx          # Main dashboard page
-│   └── _app.tsx           # App configuration with providers
-├── components/
-│   ├── WalletConnect.tsx  # Wallet connection component
-│   ├── TokenCard.tsx      # Token balances display
-│   └── YieldCard.tsx      # Lending positions display
-├── utils/
-│   ├── config.ts          # Network and contract configuration
-│   ├── fetchBalances.ts   # Token balance utilities
-│   ├── seamless.ts        # Seamless Protocol integration
-│   └── abis/
-│       ├── erc20.ts       # ERC-20 token ABI
-│       └── seamless.ts    # Seamless Protocol ABIs
-├── styles/
-│   └── globals.css        # Global styles with TailwindCSS
-└── package.json
-```
+---
 
-## 🔧 Setup & Installation
+## Quick Start (local development)
 
-1. **Clone the repository**
+Prerequisites:
 
-   ```bash
-   git clone <repository-url>
-   cd base-yield-dashboard
-   ```
+- Node.js >= 18
+- npm (or yarn)
 
-2. **Install dependencies**
-
-   ```bash
-   npm install
-   # or
-   yarn install
-   ```
-
-3. **Configure environment variables**
-
-   ```bash
-   cp .env.example .env.local
-   ```
-
-   Edit `.env.local` with your configuration:
-
-   ```env
-   NEXT_PUBLIC_BASE_RPC_URL=https://mainnet.base.org
-   NEXT_PUBLIC_ALCHEMY_API_KEY=your_alchemy_api_key
-   NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID=your_wallet_connect_project_id
-   ```
-
-4. **Run the development server**
-
-   ```bash
-   npm run dev
-   # or
-   yarn dev
-   ```
-
-5. **Open your browser**
-   Navigate to [http://localhost:3000](http://localhost:3000)
-
-## 🌐 Environment Variables
-
-| Variable                                | Description                              | Required |
-| --------------------------------------- | ---------------------------------------- | -------- |
-| `NEXT_PUBLIC_BASE_RPC_URL`              | Base network RPC endpoint                | ✅       |
-| `NEXT_PUBLIC_ALCHEMY_API_KEY`           | Alchemy API key for enhanced performance | ❌       |
-| `NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID` | WalletConnect project ID                 | ✅       |
-
-### Getting API Keys
-
-1. **Alchemy API Key**: Sign up at [alchemy.com](https://alchemy.com) and create a Base app
-2. **WalletConnect Project ID**: Create a project at [cloud.walletconnect.com](https://cloud.walletconnect.com)
-
-## 📊 Supported Protocols
-
-- **Token Balances**: ETH, USDC, WETH, AERO
-- **Seamless Protocol**: Lending and borrowing positions
-- **Base Network**: Optimized for Base L2
-
-## 🔐 Security Features
-
-- **Read-only Operations**: Dashboard only reads blockchain data, never requests signatures for transactions
-- **No Private Key Storage**: Uses standard wallet connection without storing sensitive information
-- **Direct Contract Calls**: Fetches data directly from verified smart contracts
-
-## 🚀 Deployment
-
-### Vercel (Recommended)
-
-1. Push your code to GitHub
-2. Connect your repository to [Vercel](https://vercel.com)
-3. Add environment variables in Vercel dashboard
-4. Deploy automatically on every push
-
-### Manual Deployment
+1. Clone and install
 
 ```bash
-npm run build
-npm run start
+git clone https://github.com/usmant12/base-yield-dashboard.git
+cd base-yield-dashboard
+npm install
 ```
 
-## 🤝 Contributing
+2. Add environment variables
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+```bash
+cp .env.example .env.local
+# edit .env.local and add your keys
+```
 
-## 📝 License
+Important: `.env.local` is listed in `.gitignore` so your keys won't be committed.
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+3. Run dev server
 
-## 🐛 Known Issues & Limitations
+```bash
+npm run dev
+```
 
-- **Price Data**: USD values not yet implemented (requires price API integration)
-- **LP Positions**: Aerodrome/Uniswap LP tracking planned for future releases
-- **Transaction History**: Not included in current MVP
+Open http://localhost:3000
 
-## 🔮 Roadmap
+---
 
-- [ ] Add token price integration (CoinGecko API)
-- [ ] Implement Aerodrome LP position tracking
-- [ ] Add Uniswap V3 position monitoring
-- [ ] Include transaction history
-- [ ] Add portfolio performance analytics
-- [ ] Support for additional Base protocols
+## Environment variables
 
-## 📞 Support
+Set these in `.env.local` for local development and in your hosting provider (Vercel) for production:
 
-For support, please open an issue on GitHub or contact the development team.
+- `NEXT_PUBLIC_BASE_RPC_URL` — Base RPC endpoint (public or Alchemy)
+- `NEXT_PUBLIC_ALCHEMY_API_KEY` — optional, improves reliability/performance
+- `NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID` — WalletConnect project id
+
+Note: Keep private keys and server-side secrets out of `NEXT_PUBLIC_` variables; those are visible to the client.
+
+---
+
+## Deployment (Vercel recommended)
+
+1. Push repo to GitHub (if not already)
+2. Create a new Vercel project → Import from GitHub
+3. During import, set the **Project Name** (this is just Vercel's project name and can differ from the GitHub repo name). Make sure you select the correct repository to deploy from (do **not** create a new GitHub repo from Vercel unless you want one).
+4. Add environment variables in Vercel (same keys as `.env.local`)
+5. Deploy; every push to the connected branch (usually `main`) will trigger a new build and deployment.
+
+---
+
+## Security & best practices
+
+- `.env.local` is ignored by git; do not commit secrets.
+- Use Vercel/Netlify environment variables for production secrets.
+- Run `npm audit` regularly and keep dependencies updated.
+- This app performs only read-only on-chain calls; there is no private key or server-side signing.
+
+Suggested local security commands:
+
+```bash
+npm run security:check
+npm audit
+```
+
+---
+
+## Troubleshooting
+
+- Hydration errors ("Expected server HTML to contain a matching <button>") — solved by dynamically importing RainbowKit's `ConnectButton` on the client (`ssr: false`) and rendering a matching placeholder during SSR.
+- WalletConnect QR appears instead of browser wallet — choose the injected/wallet-specific option (MetaMask/Coinbase) if you have an extension installed. WalletConnect is intended for mobile wallets or external apps.
+- "No lending positions found" after refresh — this can happen due to RPC timeouts or rate limits. The app now uses a provider singleton + retry/backoff logic and logs fetch attempts. Check the browser console for messages like `Fetching Seamless data for ... attempt X`.
+
+If you see repeated failures, consider:
+
+1. Using an Alchemy (or other) API key for a more reliable RPC endpoint
+2. Checking network selection in your wallet (Base network required)
+
+---
+
+## Developer notes / implemented details
+
+- `pages/_app.tsx` — wagmi + RainbowKit setup, Alchemy + public provider configuration and React Query provider.
+- `components/WalletConnect.tsx` — client-only dynamic import of `ConnectButton` to avoid SSR hydration mismatch and display of the connected address.
+- `utils/fetchBalances.ts` — ethers-based token balance utilities (native ETH and ERC-20 tokens). Includes safe fallbacks for symbol/decimals.
+- `utils/seamless.ts` — Seamless integration: `getUserAccountData`, `getReserveData`, `getUserSeamlessPositions`. Uses a provider singleton, timeouts, retries, and improved logging. Also formatted health factor handling.
+- `components/YieldCard.tsx` & `components/TokenCard.tsx` — UI cards for Lending and Token balances with loading placeholders.
+
+---
+
+## Next Steps (suggested)
+
+- Add price data (CoinGecko) to show USD values and portfolio totals
+- Implement Aerodrome / Uniswap LP position fetching and presentation
+- Add more robust caching (server-side or edge caching) if RPC limits persist
+- Add end-to-end tests and unit tests for data parsing utilities
+
+---
+
+## Commands
+
+```bash
+npm run dev      # start dev server
+npm run build    # production build
+npm run start    # run production server
+npm run lint     # lint project
+npm run security:check  # run npm audit + lint
+```
+
+---
+
+If you want, I can also:
+
+- Prepare a small PR that adds CoinGecko price integration (fetch and cache prices)
+- Add simple unit tests around the health factor formatting and APY calculations
+
+If anything is missing or you'd like the README to emphasize other details (custom domain instructions, Sentry integration, or CI), tell me which sections to expand.
 
 ---
 
